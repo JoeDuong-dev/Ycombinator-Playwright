@@ -20,7 +20,6 @@ async function sortHackerNewsArticles() {
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  // Added some try catch for error checks
   try {
     // Go to Hacker News
     const url = "https://news.ycombinator.com/newest";
@@ -29,25 +28,27 @@ async function sortHackerNewsArticles() {
     /* 
       Pre-code prblem solving ideas:
       For this assignment, we want the published dates for the top 100 articles on the website.
-      Then we can do a sort function to check if they are in order.
+      Then we can do a test to check if they are in order.
 
       I will also pull in some data like article ids and titles for debugging
       and to make it easier to validate the result.
     */
 
-    // I used the browser console log to find the class names and what we need
+    // This should grab what we see on the page, so 30 article ids.
     const ids = await page.$$eval(".athing.submission", (elements) =>
       elements.map((el) => el.id)
-    ); // This should grab what we see on the page, so 30 article ids.
+    );
 
+    // 30 dates
     const publishedDate = await page.$$eval(".age", (elements) =>
       elements.map((el) => el.title)
-    ); // 30 dates
+    );
 
+    // 30 titles
     const titles = await page.$$eval(
       '.titleline a[rel="nofollow"]',
       (elements) => elements.map((el) => el.textContent.trim())
-    ); // 30 titles
+    );
 
     // Ensure exactly 100 articles are returned.
     while (ids.length < 100) {
@@ -85,23 +86,21 @@ async function sortHackerNewsArticles() {
       titles.push(...titleseNew);
     }
 
-    // We have the top 100 articles' published dates here.
-    // We can loop through the array to find if they are out of order.
+    // Function to test if the articles are sorted
     async function areArticlesSorted() {
-      let sorted = true;
-      for (let i = 1; i < publishedDate.length; i++) {
-        if (Date(publishedDate[i]) < Date(publishedDate[i + 1])) {
-          sorted = false;
+      //length - 1 to avoid going out of bound
+      for (let i = 0; i < publishedDate.length - 1; i++) {
+        if (new Date(publishedDate[i]) > new Date(publishedDate[i + 1])) {
+          return false; // Return false if the dates are out of order
         }
-        return sorted;
       }
+      return true;
     }
 
-    console.log("Articles count:", publishedDate.length); // Now we have exactly 100 articles
-
-    console.log("Published Dates:", publishedDate);
-    console.log("IDs:", ids);
+    console.log("Articles count:", publishedDate.length);
+    //console.log("IDs:", ids);
     console.log("Titles:", titles);
+    console.log("Published Dates:", publishedDate);
 
     if (areArticlesSorted()) {
       console.log("The artiles are sorted. Test success.");
@@ -109,7 +108,7 @@ async function sortHackerNewsArticles() {
   } catch (error) {
     console.error(`Error: ${error}`);
   } finally {
-    //await browser.close();
+    await browser.close();
   }
 }
 
